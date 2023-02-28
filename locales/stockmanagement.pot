@@ -1,0 +1,95 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-04-19 20:38+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: en_GB\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"X-Generator: Poedit 3.0.1\n"
+
+msgid "Stock management"
+msgstr ""
+
+msgid "No current notification"
+msgstr ""
+
+msgid "Notification sent on : %1$s"
+msgstr ""
+
+msgid "No data available"
+msgstr ""
+
+msgid "Configuration saved with success !"
+msgstr ""
+
+msgid "Plugin not installed or activated"
+msgstr ""
+
+msgid "Alert threshold"
+msgstr ""
+
+msgid "Stock per type"
+msgstr ""
+
+msgid "Material type"
+msgstr ""
+
+msgid "Notification sending"
+msgstr ""
+
+msgid "Number in : %1$s"
+msgstr ""
+
+msgid "Stock per manufacturer and model"
+msgstr ""
+
+msgid "You don't have the required rights"
+msgstr ""
+
+msgid "Notification(s) sent !"
+msgstr ""
+
+msgid "Recurring notification for Stock Management"
+msgstr ""
+
+msgid "Some machines have exceeded the threshold"
+msgstr ""
+
+msgid "ITSM-NG Stock management"
+msgstr ""
+
+msgid "Notification update for Stock Management"
+msgstr ""
+
+msgid "Notification for Stock Management"
+msgstr ""
+
+msgid "Stock management update"
+msgstr ""
+
+msgid "List per type"
+msgstr ""
+
+msgid "List per manufacturer and model"
+msgstr ""
+
+msgid "Fixed threshold"
+msgstr ""
+
+msgid "Number in stock"
+msgstr ""
+
+msgid "Stock status"
+msgstr ""

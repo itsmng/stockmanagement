@@ -1,0 +1,90 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2015-04-14 13:51+0200\n"
+"PO-Revision-Date: 2022-04-19 20:37+0200\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.0.1\n"
+"X-Poedit-Basepath: .\n"
+
+msgid "Stock management"
+msgstr "Gestion des stocks"
+
+msgid "No current notification"
+msgstr "Aucune notification en cours"
+
+msgid "Notification sent on : %1$s"
+msgstr "Notification envoyée le : %1$s"
+
+msgid "No data available"
+msgstr "Aucune donnée disponible"
+
+msgid "Configuration saved with success !"
+msgstr "Configuration sauvegardée avec succès !"
+
+msgid "Plugin not installed or activated"
+msgstr "Le plugin n'est pas installé ou activé"
+
+msgid "Alert threshold"
+msgstr "Seuil d'alerte"
+
+msgid "Stock per type"
+msgstr "Stock par type"
+
+msgid "Material type"
+msgstr "Type de matériel"
+
+msgid "Notification sending"
+msgstr "Envoi de notification"
+
+msgid "Number in : %1$s"
+msgstr "Nombre en : %1$s"
+
+msgid "Stock per manufacturer and model"
+msgstr "Stock par fabricant et modèle"
+
+msgid "You don't have the required rights"
+msgstr "Vous n'avez pas les droits requis"
+
+msgid "Notification(s) sent !"
+msgstr "Notification(s) envoyée(s) !"
+
+msgid "Recurring notification for Stock Management"
+msgstr "Notification récurrente pour Gestion des stocks"
+
+msgid "Some machines have exceeded the threshold"
+msgstr "Certaines machines ont dépassées le seuil d'alerte"
+
+msgid "ITSM-NG Stock management"
+msgstr "ITSM-NG Gestion des stocks"
+
+msgid "Notification update for Stock Management"
+msgstr "Notification mise à jour pour Gestion des stocks"
+
+msgid "Notification for Stock Management"
+msgstr "Notification pour Gestion des stocks"
+
+msgid "Stock management update"
+msgstr "Mise à jour Gestion des stocks"
+
+msgid "List per type"
+msgstr "Liste par type"
+
+msgid "List per manufacturer and model"
+msgstr "Liste par fabricant et modèle"
+
+msgid "Fixed threshold"
+msgstr "Seuil fixé"
+
+msgid "Number in stock"
+msgstr "Nombre en stock"
+
+msgid "Stock status"
+msgstr "Status du stock"
