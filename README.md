@@ -42,7 +42,7 @@ When the plugin is installed, two automatic actions are added.
 
 ![Stock management automatic actions](img/stockmanagement_automatic_actions.png)
 
-The automatic actions send the alert threshot notifications.
+The automatic actions send the alert threshold notifications.
 
 ### Dashboard
 
