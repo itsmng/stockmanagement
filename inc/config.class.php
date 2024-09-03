@@ -46,9 +46,9 @@ class PluginStockmanagementConfig extends CommonDBTM
     static function getTypeName($nb=0) {
 		return __("Stock management", 'stockmanagement');
     }
-   
+
     static function getMenuContent() {
-      
+
 		$menu = array();
 		//Menu entry in config
 		$menu['title'] = self::getTypeName(2);
@@ -59,51 +59,66 @@ class PluginStockmanagementConfig extends CommonDBTM
 
 		return $menu;
     }
-   
+
     public function showForm($ID, $options = array()) {
 		global $DB;
 
-		$this->initForm($options);
 		$state = $this->getState();
-		$this->showFormHeader($options);
-
-		// Get config
 		$status = $this->getStatusConfig();
-
-		echo "<div class='center' id='tabsbody'>";
-		echo "<tr class='tab_bg_1'>";
-		echo "<td>".__("Stock status", "stockmanagement")."</td><td>";
-		Dropdown::showFromArray('stock_status', $state, ['value' => $status]);
-		echo "</td></tr>";
-		echo "<tr><th colspan='4'>" . __("Type") . "</th></tr>";
+        $form = [
+            'action' => $this->getFormURL(),
+            'itemtype' => $this->getType(),
+            'content' => [
+                '' => [
+                    'visible' => true,
+                    'inputs' => [
+                        __("Stock status", "stockmanagement") => [
+                            'name' => 'stock_status',
+                            'type' => 'select',
+                            'value' => $status,
+                            'values' => $state,
+                        ],
+                    ],
+                ],
+            ],
+        ];
 		foreach($this->materialType as $class => $title) {
 			$typeName = $class."Type";
 			$type = new $typeName();
 			$allType = $type->find();
 			$config = $this->getConfig("TYPE");
 			if(!empty($allType)) {
-				echo "<tr><th colspan='4'>" . __($title) . "</th></tr>";
+                $form['content'][__($title) . " - (" . __("Type") . ")"] = [
+                    'visible' => true,
+                    'inputs' => [],
+                ];
 				foreach($allType as $infos) {
-					if($config == 0 || $config[$class][$infos['id']] == null) {
+					if($config == 0 || !isset($config[$class][$infos['id']])) {
 						$num = 0;
 					} else {
 						$num = $config[$class][$infos['id']];
 					}
-					echo "<tr class='tab_bg_1'><td>".$infos['name']."</td>";
-					echo "<td>";
-					echo __("Alert threshold", "stockmanagement").' : <input type="number" id="seuil_'.$class.'_TYPE_'.$infos['id'].'" name="seuil_'.$class.'_TYPE_'.$infos['id'].'" value="'.$num.'" min="0">';
-					echo "</td></tr>";
+                    $form['content'][__($title) . " - (" . __("Type") . ")"]['inputs'][$infos['name']] = [
+                        'name' => 'seuil_'.$class.'_TYPE_'.$infos['id'],
+                        'type' => 'number',
+                        'value' => $num,
+                        'min' => 0,
+                        'before' => __("Alert threshold", "stockmanagement"),
+                        'col_lg' => 6,
+                    ];
 				}
 			}
 		}
 
-		echo "<tr><th colspan='4'>" . __("Manufacturer")." - ".__("Model") . "</th></tr>";
 		foreach($this->materialType as $class => $title) {
 			$list = $this->getModelAndMarque($class);
 			$config = $this->getConfig("MARQUE");
 
 			if(!empty($list)) {
-				echo "<tr><th colspan='4'>" . __($title) . "</th></tr>";
+                $form['content'][__($title) . " - (" . __("Manufacturer") . " - " . __("Model") . ")"] = [
+                    'visible' => true,
+                    'inputs' => [],
+                ];
 				foreach($list as $infos) {
 					if(isset($infos['MARQUE_NAME']) && isset($infos['MODEL_NAME'])) {
 						if($config == 0 || !isset($config[$class][$infos['MARQUE_ID'].$infos['MODEL_ID']])) {
@@ -111,19 +126,20 @@ class PluginStockmanagementConfig extends CommonDBTM
 						} else {
 							$num = $config[$class][$infos['MARQUE_ID'].$infos['MODEL_ID']];
 						}
-						echo "<tr class='tab_bg_1'><td>".$infos['MARQUE_NAME']." - ".$infos['MODEL_NAME']."</td>";
-						echo "<td>";
-						echo __("Alert threshold", "stockmanagement").' : <input type="number" id="seuil_'.$class.'_MARQUE_'.$infos['MARQUE_ID'].'_'.$infos['MODEL_ID'].'" name="seuil_'.$class.'_MARQUE_'.$infos['MARQUE_ID'].'_'.$infos['MODEL_ID'].'" value="'.$num.'" min="0">';
-						echo "</td></tr>";
+                        $form['content'][__($title) . " - (" . __("Manufacturer") . " - " . __("Model") . ")"]['inputs'][$infos['MARQUE_NAME']." - ".$infos['MODEL_NAME']] = [
+                            'name' => 'seuil_'.$class.'_MARQUE_'.$infos['MARQUE_ID'].'_'.$infos['MODEL_ID'],
+                            'type' => 'number',
+                            'value' => $num,
+                            'min' => 0,
+                            'before' => __("Alert threshold", "stockmanagement"),
+                            'col_lg' => 6,
+                        ];
 					}
 				}
 			}
 		}
-		
-		echo "</div>";
 
-		$this->showFormButtons($options);
-	
+        renderTwigForm($form, '', $options);
 		return true;
 	}
 
@@ -159,11 +175,11 @@ class PluginStockmanagementConfig extends CommonDBTM
 
     public function getSearchOptions() {
 		$tab = array();
-		
+
 		return $tab;
     }
 
-    public function install(Migration $mig) { 	
+    public function install(Migration $mig) {
       	return true;
 	}
 
@@ -201,10 +217,10 @@ class PluginStockmanagementConfig extends CommonDBTM
 		}
 
 		// Insert / Update status stock
-		
+
 		$this->insertUpdateState($status);
-		
-		
+
+
 
 		foreach($seuil as $type => $infos) {
 			if($type == "TYPE") {
@@ -247,7 +263,7 @@ class PluginStockmanagementConfig extends CommonDBTM
 								$sqlInsert = "UPDATE glpi_plugin_stockmanagement_configs
 											SET ALERT_SEUIL = $nbseuil WHERE MARQUE_ID = $marque AND MODEL_ID = $id AND CLASS_TYPE = '$class'";
 								$result = $DB->query($sqlInsert);
-							}	
+							}
 						}
 					}
 				}
