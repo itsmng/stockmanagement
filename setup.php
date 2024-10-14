@@ -60,7 +60,7 @@ function plugin_init_stockmanagement() {
 function plugin_version_stockmanagement() {
 	return array(
 		'name'           => __('Stock management', 'stockmanagement'),
-		'version'        => '1.0',
+		'version'        => '2.0.0',
 		'license'        => 'AGPLv3+',
 		'author'         => 'ITSM Dev Team',
 		'homepage'       => 'https://github.com/itsmng/stockmanagement',
