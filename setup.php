@@ -44,14 +44,15 @@ function plugin_init_stockmanagement() {
 
    Plugin::registerClass('PluginStockmanagementNotification', ['notificationtemplates_types' => true]);
 
-   if(Session::haveRight("plugin_stockmanagement_config", CREATE)) {
-      $PLUGIN_HOOKS['menu_toadd']['stockmanagement'] = array('tools' => 'PluginStockmanagementConfig');
-   }
-
    $PLUGIN_HOOKS['add_javascript']['stockmanagement'] = array("js/function.js");
 
    // CSRF Compliant do not touch
    $PLUGIN_HOOKS['csrf_compliant']['stockmanagement'] = true;
+
+   $plugin = new Plugin();
+   if ($plugin->isActivated("stockmanagement")) {
+      $PLUGIN_HOOKS['config_page']['stockmanagement'] = 'front/config.form.php';
+   }
 }
 
 /**
