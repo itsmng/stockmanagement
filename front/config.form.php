@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ---------------------------------------------------------------------
  * ITSM-NG
@@ -30,26 +31,27 @@
  * ---------------------------------------------------------------------
  */
 
-include ("../../../inc/includes.php");
+include("../../../inc/includes.php");
 
 $plugin = new Plugin();
 if (!$plugin->isInstalled('stockmanagement') || !$plugin->isActivated('stockmanagement')) {
-	global $CFG_GLPI;
-	echo '<div class=\'center\'><br><br><img src=\'' . $CFG_GLPI['root_doc'] . '/pics/warning.png\' alt=\'warning\'><br><br>';
-	echo '<b>' . __("Plugin not installed or activated", "stockmanagement") . '</b></div>';
+    global $CFG_GLPI;
+    echo '<div class=\'center\'><br><br><img src=\'' . $CFG_GLPI['root_doc'] . '/pics/warning.png\' alt=\'warning\'><br><br>';
+    echo '<b>' . __("Plugin not installed or activated", "stockmanagement") . '</b></div>';
 }
 
 $config = new PluginStockmanagementConfig();
 
 if (isset($_POST["add"])) {
-	Html::header(__("Stock management", "stockmanagement"), $_SERVER['PHP_SELF'], "tools", "PluginStockmanagementConfig","stockmanagement");
-	Session::checkRight("plugin_stockmanagement_config", CREATE);
-	$config->updateConfig(1, $_POST);
+    Html::header(__("Stock management", "stockmanagement"), $_SERVER['PHP_SELF'], "tools", "PluginStockmanagementConfig", "stockmanagement");
+    Session::checkRight("plugin_stockmanagement_config", CREATE);
+    $config->updateConfig(1, $_POST);
 
-	Session::addMessageAfterRedirect(__("Configuration saved with success !", "stockmanagement"), true);
-	Html::back();
+    Session::addMessageAfterRedirect(__("Configuration saved with success !", "stockmanagement"), true);
+    Html::back();
 } else {
-	Html::header(__("Stock management", "stockmanagement"), $_SERVER['PHP_SELF'], "tools", "PluginStockmanagementConfig","stockmanagement");
-	$config->showForm(1);
-	Html::footer();
+    Html::header(__("Stock management", "stockmanagement"), $_SERVER['PHP_SELF'], "tools", "PluginStockmanagementConfig", "stockmanagement");
+    Session::checkRight("plugin_stockmanagement_config", READ);
+    $config->showForm(1);
+    Html::footer();
 }

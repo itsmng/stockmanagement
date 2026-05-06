@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ---------------------------------------------------------------------
  * ITSM-NG
@@ -30,13 +31,14 @@
  * ---------------------------------------------------------------------
  */
 
-function plugin_stockmanagement_install() {
+function plugin_stockmanagement_install()
+{
     global $DB;
 
     $migration = new Migration(180);
 
     if (!$DB->tableExists('glpi_plugin_stockmanagement_configs')) {
-		$query = "CREATE TABLE `glpi_plugin_stockmanagement_configs` (
+        $query = "CREATE TABLE `glpi_plugin_stockmanagement_configs` (
 			`id`              INT(11) NOT NULL AUTO_INCREMENT,
 			`CONFIG_ID`       INT(2) NOT NULL DEFAULT 1,
 			`TYPE_ID`         INT(11) DEFAULT NULL,
@@ -47,20 +49,20 @@ function plugin_stockmanagement_install() {
 			`ALERT_SEUIL`     INT(11) NOT NULL,
 			PRIMARY KEY (`id`)
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";
-		$DB->query($query);
+        $DB->query($query);
     }
 
     if (!$DB->tableExists('glpi_plugin_stockmanagement_states')) {
-		$query = "CREATE TABLE `glpi_plugin_stockmanagement_states` (
+        $query = "CREATE TABLE `glpi_plugin_stockmanagement_states` (
 			`id`              INT(11) NOT NULL AUTO_INCREMENT,
 			`STATE_ID`        INT(11) NOT NULL,
 			PRIMARY KEY (`id`)
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";
-		$DB->query($query);
+        $DB->query($query);
     }
 
     if (!$DB->tableExists('glpi_plugin_stockmanagement_dashboard')) {
-		$query = "CREATE TABLE `glpi_plugin_stockmanagement_dashboard` (
+        $query = "CREATE TABLE `glpi_plugin_stockmanagement_dashboard` (
 			`id`              INT(11) NOT NULL AUTO_INCREMENT,
 			`TYPE`            varchar(255) DEFAULT NULL,
 			`MARQUE`           varchar(255) DEFAULT NULL,
@@ -70,18 +72,18 @@ function plugin_stockmanagement_install() {
 			`NOTIF`           DATETIME DEFAULT NULL,
 			PRIMARY KEY (`id`)
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";
-		$DB->query($query);
+        $DB->query($query);
     }
 
-	if (!$DB->tableExists('glpi_plugin_stockmanagement_notifications')) {
-		$query = "CREATE TABLE `glpi_plugin_stockmanagement_notifications` (
+    if (!$DB->tableExists('glpi_plugin_stockmanagement_notifications')) {
+        $query = "CREATE TABLE `glpi_plugin_stockmanagement_notifications` (
 			`id`              INT(11) NOT NULL AUTO_INCREMENT,
 			PRIMARY KEY (`id`)
 		) ENGINE = InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;";
-		$DB->query($query);
+        $DB->query($query);
     }
 
-    if (!$DB->tableExists("glpi_plugin_stockmanagement_profiles")) {  
+    if (!$DB->tableExists("glpi_plugin_stockmanagement_profiles")) {
         $query2 = "CREATE TABLE `glpi_plugin_stockmanagement_profiles` (
 			`id` int(11) NOT NULL default '0' COMMENT 'RELATION to glpi_profiles (id)',
 			`right` char(1) collate utf8_unicode_ci default NULL,
@@ -91,11 +93,13 @@ function plugin_stockmanagement_install() {
 
         include_once(GLPI_ROOT."/plugins/stockmanagement/inc/profile.class.php");
         PluginStockmanagementProfile::createAdminAccess($_SESSION['glpiactiveprofile']['id']);
-        
+
         foreach (PluginStockmanagementProfile::getAllRights() as $right) {
             PluginStockmanagementProfile::addRight($_SESSION['glpiactiveprofile']['id'], [$right['field'] => $right['default']]);
         }
-    } else $DB->queryOrDie("ALTER TABLE `glpi_plugin_stockmanagement_profiles` ENGINE = InnoDB", $DB->error());
+    } else {
+        $DB->queryOrDie("ALTER TABLE `glpi_plugin_stockmanagement_profiles` ENGINE = InnoDB", $DB->error());
+    }
 
     // No autoload when plugin is not activated
     require 'inc/config.class.php';
@@ -103,10 +107,10 @@ function plugin_stockmanagement_install() {
     $plugin_config->install($migration);
 
     // == Install notifications
-	require_once "inc/notification.class.php";
-	PluginStockmanagementNotification::install($migration);
-	CronTask::Register('PluginStockmanagementNotification', 'SendAlertMorning', DAY_TIMESTAMP);
-	CronTask::Register('PluginStockmanagementNotification', 'SendAlertAfternoon', DAY_TIMESTAMP);
+    require_once "inc/notification.class.php";
+    PluginStockmanagementNotification::install($migration);
+    CronTask::Register('PluginStockmanagementNotification', 'SendAlertMorning', DAY_TIMESTAMP);
+    CronTask::Register('PluginStockmanagementNotification', 'SendAlertAfternoon', DAY_TIMESTAMP);
 
     $migration->executeMigration();
 
@@ -114,7 +118,8 @@ function plugin_stockmanagement_install() {
 }
 
 
-function plugin_stockmanagement_uninstall() {
+function plugin_stockmanagement_uninstall()
+{
     global $DB;
 
     $DB->query("DROP TABLE IF EXISTS `glpi_plugin_stockmanagement_configs`");
@@ -132,16 +137,12 @@ function plugin_stockmanagement_uninstall() {
     PluginStockmanagementNotification::uninstall();
 
     foreach (PluginStockmanagementProfile::getAllRights() as $right) {
-		$query = "DELETE FROM `glpi_profilerights` WHERE `name` = '".$right['field']."'";
-		$DB->query($query);
+        $DB->delete('glpi_profilerights', ['name' => $right['field']]);
 
-		if (isset($_SESSION['glpiactiveprofile'][$right['field']])) {
-			unset($_SESSION['glpiactiveprofile'][$right['field']]);
-		}
+        if (isset($_SESSION['glpiactiveprofile'][$right['field']])) {
+            unset($_SESSION['glpiactiveprofile'][$right['field']]);
+        }
     }
 
     return true;
 }
-
- 
- 

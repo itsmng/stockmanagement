@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ---------------------------------------------------------------------
  * ITSM-NG
@@ -30,57 +31,60 @@
  * ---------------------------------------------------------------------
  */
 
-class PluginStockmanagementNotificationTargetNotification extends NotificationTarget {
+class PluginStockmanagementNotificationTargetNotification extends NotificationTarget
+{
+    public $additionalData;
 
-	var $additionalData;
+    public function getEvents()
+    {
+        return [
+            'sendAlertThreshold' => __('Stock management', 'stockmanagement'),
+            'sendAlertThresholdUpdate' => __('Stock management update', 'stockmanagement')
+        ];
+    }
 
-	function getEvents() {
-		return [
-			'sendAlertThreshold' => __('Stock management', 'stockmanagement'),
-			'sendAlertThresholdUpdate' => __('Stock management update', 'stockmanagement')
-		];
-	}
+    public function getTags()
+    {
+        $this->addTagToList([
+            'tag'   => 'stockmanagement.listtype',
+            'label' => __('List'),
+            'value' => true
+        ]);
+        $this->addTagToList([
+            'tag'   => 'stockmanagement.listmanufacturer',
+            'label' => __('List'),
+            'value' => true
+        ]);
 
-	function getTags() {
-		$this->addTagToList([
-			'tag'   => 'stockmanagement.listtype',
-			'label' => __('List'),
-			'value' => true
-		]);
-		$this->addTagToList([
-			'tag'   => 'stockmanagement.listmanufacturer',
-			'label' => __('List'),
-			'value' => true
-		]);
+        asort($this->tag_descriptions);
+    }
 
-		asort($this->tag_descriptions);
-	}
+    public function addDataForTemplate($event, $options = [])
+    {
+        $listtype = "";
+        $listmanufacturer = "";
+        $dashboard = new PluginStockmanagementDashboard();
 
-	function addDataForTemplate($event, $options = []) {
-		$listtype = "";
-		$listmanufacturer = "";
-		$dashboard = new PluginStockmanagementDashboard();
+        $state  = $dashboard->getState();
 
-		$state  = $dashboard->getState();
+        $data   = $dashboard->getAllMachines($state['STATE_ID']);
+        $data   = $dashboard->verifSeuil($data);
 
-		$data   = $dashboard->getAllMachines($state['STATE_ID']);
-		$data   = $dashboard->verifSeuil($data);
+        foreach ($data as $type => $values) {
+            foreach ($values as $key => $value) {
+                if (isset($value['NOTIF'])) {
+                    if ($type == "TYPE") {
+                        $listtype .= __("Type")." : ".$value['name']."\n".__("Fixed threshold", "stockmanagement")." : ".$value['ALERT_SEUIL']."\n\n".__("Number in stock", "stockmanagement")." : ".$value['NB']."\n\n";
+                    } else {
+                        $listmanufacturer .= __("Manufacturer")." : ".$value['marque']."\n".__("Model")." : ".$value['model']."\n".__("Fixed threshold", "stockmanagement")." : ".$value['ALERT_SEUIL']."\n\n".__("Number in stock", "stockmanagement")." : ".$value['NB']."\n\n";
+                    }
+                }
+            }
+        }
 
-		foreach($data as $type => $values) {
-			foreach($values as $key => $value) {
-				if(isset($value['NOTIF'])) {
-					if($type == "TYPE") {
-						$listtype .= __("Type")." : ".$value['name']."\n".__("Fixed threshold", "stockmanagement")." : ".$value['ALERT_SEUIL']."\n\n".__("Number in stock", "stockmanagement")." : ".$value['NB']."\n\n";
-					} else {
-						$listmanufacturer .= __("Manufacturer")." : ".$value['marque']."\n".__("Model")." : ".$value['model']."\n".__("Fixed threshold", "stockmanagement")." : ".$value['ALERT_SEUIL']."\n\n".__("Number in stock", "stockmanagement")." : ".$value['NB']."\n\n";
-					}
-				}
-			}
-		}
-
-		$this->data['##lang.stockmanagement.listtype##'] = __('List per type', 'stockmanagement');
-		$this->data['##stockmanagement.listtype##']      = $listtype;
-		$this->data['##lang.stockmanagement.listmanufacturer##'] = __('List per manufacturer and model', 'stockmanagement');
-		$this->data['##stockmanagement.listmanufacturer##']      = $listmanufacturer;
-	}
+        $this->data['##lang.stockmanagement.listtype##'] = __('List per type', 'stockmanagement');
+        $this->data['##stockmanagement.listtype##']      = $listtype;
+        $this->data['##lang.stockmanagement.listmanufacturer##'] = __('List per manufacturer and model', 'stockmanagement');
+        $this->data['##stockmanagement.listmanufacturer##']      = $listmanufacturer;
+    }
 }

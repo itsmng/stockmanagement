@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ---------------------------------------------------------------------
  * ITSM-NG
@@ -32,39 +33,45 @@
 
 class PluginStockmanagementConfig extends CommonDBTM
 {
-    static $rightname         = 'plugin_stockmanagement_config';
+    public static $rightname         = 'plugin_stockmanagement_config';
 
-	private $materialType = [
-		Computer::class => "Computer",
-		Monitor::class  => "Monitor",
-		NetworkEquipment::class => "Network device",
-		Peripheral::class => "Peripheral",
-		Printer::class  => "Printer",
-		Phone::class  => "Phone"
+    private const CONFIG_TABLE = 'glpi_plugin_stockmanagement_configs';
+    private const STATE_TABLE = 'glpi_plugin_stockmanagement_states';
+
+    private $materialType = [
+        Computer::class => "Computer",
+        Monitor::class  => "Monitor",
+        NetworkEquipment::class => "Network device",
+        Peripheral::class => "Peripheral",
+        Printer::class  => "Printer",
+        Phone::class  => "Phone"
     ];
 
-    static function getTypeName($nb=0) {
-		return __("Stock management", 'stockmanagement');
+    public static function getTypeName($nb = 0)
+    {
+        return __("Stock management", 'stockmanagement');
     }
 
-    static function getMenuContent() {
+    public static function getMenuContent()
+    {
 
-		$menu = array();
-		//Menu entry in config
-		$menu['title'] = self::getTypeName(2);
-		$menu['page'] = "/plugins/stockmanagement/front/config.form.php";
-		$menu['links']['search'] = "/plugins/stockmanagement/front/config.form.php";
-		$menu['links']['add'] = '/plugins/stockmanagement/front/config.form.php';
-		$menu['icon']  = "fa-fw fas fa-chart-bar";
+        $menu = array();
+        //Menu entry in config
+        $menu['title'] = self::getTypeName(2);
+        $menu['page'] = "/plugins/stockmanagement/front/config.form.php";
+        $menu['links']['search'] = "/plugins/stockmanagement/front/config.form.php";
+        $menu['links']['add'] = '/plugins/stockmanagement/front/config.form.php';
+        $menu['icon']  = "fa-fw fas fa-chart-bar";
 
-		return $menu;
+        return $menu;
     }
 
-    public function showForm($ID, $options = array()) {
-		global $DB;
+    public function showForm($ID, $options = array())
+    {
+        global $DB;
 
-		$state = $this->getState();
-		$status = $this->getStatusConfig();
+        $state = $this->getState();
+        $status = $this->getStatusConfig();
         $form = [
             'action' => $this->getFormURL(),
             'itemtype' => $this->getType(),
@@ -82,22 +89,22 @@ class PluginStockmanagementConfig extends CommonDBTM
                 ],
             ],
         ];
-		foreach($this->materialType as $class => $title) {
-			$typeName = $class."Type";
-			$type = new $typeName();
-			$allType = $type->find();
-			$config = $this->getConfig("TYPE");
-			if(!empty($allType)) {
+        foreach ($this->materialType as $class => $title) {
+            $typeName = $class."Type";
+            $type = new $typeName();
+            $allType = $type->find();
+            $config = $this->getConfig("TYPE");
+            if (!empty($allType)) {
                 $form['content'][__($title) . " - (" . __("Type") . ")"] = [
                     'visible' => true,
                     'inputs' => [],
                 ];
-				foreach($allType as $infos) {
-					if($config == 0 || !isset($config[$class][$infos['id']])) {
-						$num = 0;
-					} else {
-						$num = $config[$class][$infos['id']];
-					}
+                foreach ($allType as $infos) {
+                    if ($config == 0 || !isset($config[$class][$infos['id']])) {
+                        $num = 0;
+                    } else {
+                        $num = $config[$class][$infos['id']];
+                    }
                     $form['content'][__($title) . " - (" . __("Type") . ")"]['inputs'][$infos['name']] = [
                         'name' => 'seuil_'.$class.'_TYPE_'.$infos['id'],
                         'type' => 'number',
@@ -106,26 +113,27 @@ class PluginStockmanagementConfig extends CommonDBTM
                         'before' => __("Alert threshold", "stockmanagement"),
                         'col_lg' => 6,
                     ];
-				}
-			}
-		}
+                }
+            }
+        }
 
-		foreach($this->materialType as $class => $title) {
-			$list = $this->getModelAndMarque($class);
-			$config = $this->getConfig("MARQUE");
+        foreach ($this->materialType as $class => $title) {
+            $list = $this->getModelAndMarque($class);
+            $config = $this->getConfig("MARQUE");
 
-			if(!empty($list)) {
+            if (!empty($list)) {
                 $form['content'][__($title) . " - (" . __("Manufacturer") . " - " . __("Model") . ")"] = [
                     'visible' => true,
                     'inputs' => [],
                 ];
-				foreach($list as $infos) {
-					if(isset($infos['MARQUE_NAME']) && isset($infos['MODEL_NAME'])) {
-						if($config == 0 || !isset($config[$class][$infos['MARQUE_ID'].$infos['MODEL_ID']])) {
-							$num = 0;
-						} else {
-							$num = $config[$class][$infos['MARQUE_ID'].$infos['MODEL_ID']];
-						}
+                foreach ($list as $infos) {
+                    if (isset($infos['MARQUE_NAME']) && isset($infos['MODEL_NAME'])) {
+                        $config_key = self::getManufacturerModelConfigKey($infos['MARQUE_ID'], $infos['MODEL_ID']);
+                        if ($config == 0 || !isset($config[$class][$config_key])) {
+                            $num = 0;
+                        } else {
+                            $num = $config[$class][$config_key];
+                        }
                         $form['content'][__($title) . " - (" . __("Manufacturer") . " - " . __("Model") . ")"]['inputs'][$infos['MARQUE_NAME']." - ".$infos['MODEL_NAME']] = [
                             'name' => 'seuil_'.$class.'_MARQUE_'.$infos['MARQUE_ID'].'_'.$infos['MODEL_ID'],
                             'type' => 'number',
@@ -134,193 +142,261 @@ class PluginStockmanagementConfig extends CommonDBTM
                             'before' => __("Alert threshold", "stockmanagement"),
                             'col_lg' => 6,
                         ];
-					}
-				}
-			}
-		}
+                    }
+                }
+            }
+        }
 
         renderTwigForm($form, '', $options);
-		return true;
-	}
-
-	private function getModelAndMarque($class) {
-		$manufacturers = new Manufacturer();
-		$manufacturers = $manufacturers->find();
-		$modelName = $class."Model";
-		$classEquipment = new $class();
-		$modelClass = new $modelName();
-
-		$list = [];
-		foreach($manufacturers as $key => $value) {
-			$equipment = $classEquipment->find(["manufacturers_id" => $manufacturers[$key]['id']]);
-			foreach ($equipment as $id => $values) {
-				$list[$equipment[$id][strtolower($class).'models_id']]['MARQUE_ID'] = $manufacturers[$key]['id'];
-				$list[$equipment[$id][strtolower($class).'models_id']]['MARQUE_NAME'] = $manufacturers[$key]['name'];
-			}
-		}
-
-		if(!empty($list)) {
-			foreach($list as $model => $marque) {
-				$modelArray = $modelClass->find(["id" => $model]);
-				if(empty($modelArray)) unset($list[$model]);
-				foreach($modelArray as $num => $name) {
-					$list[$model]['MODEL_ID'] = $modelArray[$num]['id'];
-					$list[$model]['MODEL_NAME'] = $modelArray[$num]['name'];
-				}
-			}
-		}
-
-		return $list;
-	}
-
-    public function getSearchOptions() {
-		$tab = array();
-
-		return $tab;
+        return true;
     }
 
-    public function install(Migration $mig) {
-      	return true;
-	}
+    private function getModelAndMarque($class)
+    {
+        $manufacturers = new Manufacturer();
+        $manufacturers = $manufacturers->find();
+        $modelName = $class."Model";
+        $classEquipment = new $class();
+        $modelClass = new $modelName();
 
-    public function uninstall() {
-		return true;
+        $list = [];
+        foreach ($manufacturers as $key => $value) {
+            $equipment = $classEquipment->find(["manufacturers_id" => $manufacturers[$key]['id']]);
+            foreach ($equipment as $id => $values) {
+                $model_id = (int) $equipment[$id][strtolower($class).'models_id'];
+                $manufacturer_id = (int) $manufacturers[$key]['id'];
+                if ($model_id === 0) {
+                    continue;
+                }
+                $list[self::getManufacturerModelConfigKey($manufacturer_id, $model_id)] = [
+                    'MARQUE_ID'   => $manufacturer_id,
+                    'MARQUE_NAME' => $manufacturers[$key]['name'],
+                    'MODEL_ID'    => $model_id,
+                ];
+            }
+        }
+
+        if (!empty($list)) {
+            foreach ($list as $key => $marque) {
+                $modelArray = $modelClass->find(["id" => $marque['MODEL_ID']]);
+                if (empty($modelArray)) {
+                    unset($list[$key]);
+                }
+                foreach ($modelArray as $num => $name) {
+                    $list[$key]['MODEL_ID'] = $modelArray[$num]['id'];
+                    $list[$key]['MODEL_NAME'] = $modelArray[$num]['name'];
+                }
+            }
+        }
+
+        return $list;
     }
 
-    private function getState() {
-		$allState = [];
-		$state = new State();
-		$states = $state->find();
-		foreach($states as $list) {
-			$allState[$list['id']] = $list['name'];
-		}
+    public function getSearchOptions()
+    {
+        $tab = array();
 
-		return $allState;
+        return $tab;
     }
 
-    public function updateConfig($idConfig, $post) {
-		global $DB;
-
-		$status = null;
-		$seuil = [];
-		foreach($post as $key => $value) {
-			if($key == "stock_status") {
-				$status = $value;
-			} elseif(strpos($key, "seuil_") !== false) {
-				$keys = explode("_", $key);
-				if($keys[2] == "TYPE") {
-					$seuil[$keys[2]][$keys[1]][$keys[3]] = $value;
-				} else {
-					$seuil[$keys[2]][$keys[1]][$keys[3]][$keys[4]] = $value;
-				}
-			}
-		}
-
-		// Insert / Update status stock
-
-		$this->insertUpdateState($status);
-
-
-
-		foreach($seuil as $type => $infos) {
-			if($type == "TYPE") {
-				foreach($infos as $class => $info) {
-					foreach($info as $id => $nbseuil) {
-						$sqlVerif = "SELECT id FROM glpi_plugin_stockmanagement_configs WHERE TYPE_ID = $id AND CLASS_TYPE = '$class'";
-						$result = $DB->query($sqlVerif);
-
-						if($result->num_rows == 0 && $nbseuil != 0) {
-							$sqlInsert = "INSERT INTO glpi_plugin_stockmanagement_configs (CONFIG_ID, TYPE_ID, CLASS_TYPE, ALERT_SEUIL, TYPE)
-										VALUES ($idConfig, $id, '$class', $nbseuil, '$type')";
-							$result = $DB->query($sqlInsert);
-						} elseif($result->num_rows != 0 && $nbseuil == 0) {
-							$sqlInsert = "DELETE FROM glpi_plugin_stockmanagement_configs
-										WHERE TYPE_ID = $id AND CLASS_TYPE = '$class'";
-							$result = $DB->query($sqlInsert);
-						} else {
-							$sqlInsert = "UPDATE glpi_plugin_stockmanagement_configs
-										SET ALERT_SEUIL = $nbseuil WHERE TYPE_ID = $id AND CLASS_TYPE = '$class'";
-							$result = $DB->query($sqlInsert);
-						}
-					}
-				}
-			} else {
-				foreach($infos as $class => $values) {
-					foreach($values as $marque => $model) {
-						foreach($model as $id => $nbseuil) {
-							$sqlVerif = "SELECT id FROM glpi_plugin_stockmanagement_configs WHERE MARQUE_ID = $marque AND MODEL_ID = $id AND CLASS_TYPE = '$class'";
-							$result = $DB->query($sqlVerif);
-
-							if($result->num_rows == 0 && $nbseuil != 0) {
-								$sqlInsert = "INSERT INTO glpi_plugin_stockmanagement_configs (CONFIG_ID, MARQUE_ID, MODEL_ID, CLASS_TYPE, ALERT_SEUIL, TYPE)
-											VALUES ($idConfig, $marque, $id, '$class', $nbseuil, '$type')";
-								$result = $DB->query($sqlInsert);
-							} elseif($result->num_rows != 0 && $nbseuil == 0) {
-								$sqlInsert = "DELETE FROM glpi_plugin_stockmanagement_configs
-											WHERE MARQUE_ID = $marque AND MODEL_ID = $id AND CLASS_TYPE = '$class'";
-								$result = $DB->query($sqlInsert);
-							} else {
-								$sqlInsert = "UPDATE glpi_plugin_stockmanagement_configs
-											SET ALERT_SEUIL = $nbseuil WHERE MARQUE_ID = $marque AND MODEL_ID = $id AND CLASS_TYPE = '$class'";
-								$result = $DB->query($sqlInsert);
-							}
-						}
-					}
-				}
-			}
-		}
-
-		PluginStockmanagementNotification::sendAlertUpdate();
-	}
-
-    private function insertUpdateState($status) {
-		global $DB;
-
-		$sqlVerif = "SELECT STATE_ID FROM glpi_plugin_stockmanagement_states WHERE id = 1";
-		$result = $DB->query($sqlVerif);
-
-		if($result->num_rows == 0) {
-			$sqlInsert = "INSERT INTO glpi_plugin_stockmanagement_states (STATE_ID) VALUES ($status)";
-			$result = $DB->query($sqlInsert);
-		} else {
-			$sqlInsert = "UPDATE glpi_plugin_stockmanagement_states SET STATE_ID = $status WHERE id = 1";
-			$result = $DB->query($sqlInsert);
-		}
+    public function install(Migration $mig)
+    {
+        return true;
     }
 
-    public function getStatusConfig() {
-		global $DB;
-
-		$sql = "SELECT STATE_ID FROM glpi_plugin_stockmanagement_states WHERE id = 1";
-		$result = $DB->query($sql);
-		if($result->num_rows != 0) {
-			foreach($result as $status) {
-				return $status['STATE_ID'];
-			}
-		} else {
-			return 0;
-		}
+    public function uninstall()
+    {
+        return true;
     }
 
-    public function getConfig($type) {
-		global $DB;
-		$config = [];
+    private function getState()
+    {
+        $allState = [];
+        $state = new State();
+        $states = $state->find();
+        foreach ($states as $list) {
+            $allState[$list['id']] = $list['name'];
+        }
 
-		$sql = "SELECT * FROM glpi_plugin_stockmanagement_configs WHERE CONFIG_ID = 1 AND TYPE = '$type'";
-		$result = $DB->query($sql);
+        return $allState;
+    }
 
-		if($result->num_rows != 0) {
-			foreach($result as $infos) {
-				if($type == "TYPE") {
-					$config[$infos['CLASS_TYPE']][$infos['TYPE_ID']] = $infos['ALERT_SEUIL'];
-				} else {
-					$config[$infos['CLASS_TYPE']][$infos['MARQUE_ID'].$infos['MODEL_ID']] = $infos['ALERT_SEUIL'];
-				}
-			}
-			return $config;
-		} else {
-			return 0;
-		}
+    public function updateConfig($idConfig, $post)
+    {
+        global $DB;
+
+        $status = null;
+        $seuil = [];
+        foreach ($post as $key => $value) {
+            if ($key == "stock_status") {
+                $status = (int) $value;
+            } elseif (strpos($key, "seuil_") !== false) {
+                $keys = explode("_", $key);
+                if (
+                    count($keys) < 4
+                    || !isset($this->materialType[$keys[1]])
+                    || !in_array($keys[2], ['TYPE', 'MARQUE'], true)
+                ) {
+                    continue;
+                }
+
+                if ($keys[2] == "TYPE") {
+                    $seuil[$keys[2]][$keys[1]][(int) $keys[3]] = max(0, (int) $value);
+                } elseif (isset($keys[4])) {
+                    $seuil[$keys[2]][$keys[1]][(int) $keys[3]][(int) $keys[4]] = max(0, (int) $value);
+                }
+            }
+        }
+
+        // Insert / Update status stock
+
+        $this->insertUpdateState($status);
+
+
+
+        foreach ($seuil as $type => $infos) {
+            if ($type == "TYPE") {
+                foreach ($infos as $class => $info) {
+                    foreach ($info as $id => $nbseuil) {
+                        $where = [
+                            'TYPE_ID'    => (int) $id,
+                            'CLASS_TYPE' => self::quotedValue($class),
+                            'TYPE'       => self::quotedValue($type),
+                        ];
+                        $exists = self::configExists($where);
+
+                        if (!$exists && $nbseuil != 0) {
+                            $DB->insert(self::CONFIG_TABLE, [
+                                'CONFIG_ID'   => (int) $idConfig,
+                                'TYPE_ID'     => (int) $id,
+                                'CLASS_TYPE'  => self::quotedValue($class),
+                                'ALERT_SEUIL' => (int) $nbseuil,
+                                'TYPE'        => self::quotedValue($type),
+                            ]);
+                        } elseif ($exists && $nbseuil == 0) {
+                            $DB->delete(self::CONFIG_TABLE, $where);
+                        } else {
+                            $DB->update(self::CONFIG_TABLE, ['ALERT_SEUIL' => (int) $nbseuil], $where);
+                        }
+                    }
+                }
+            } else {
+                foreach ($infos as $class => $values) {
+                    foreach ($values as $marque => $model) {
+                        foreach ($model as $id => $nbseuil) {
+                            $where = [
+                                'MARQUE_ID'  => (int) $marque,
+                                'MODEL_ID'   => (int) $id,
+                                'CLASS_TYPE' => self::quotedValue($class),
+                                'TYPE'       => self::quotedValue($type),
+                            ];
+                            $exists = self::configExists($where);
+
+                            if (!$exists && $nbseuil != 0) {
+                                $DB->insert(self::CONFIG_TABLE, [
+                                    'CONFIG_ID'   => (int) $idConfig,
+                                    'MARQUE_ID'   => (int) $marque,
+                                    'MODEL_ID'    => (int) $id,
+                                    'CLASS_TYPE'  => self::quotedValue($class),
+                                    'ALERT_SEUIL' => (int) $nbseuil,
+                                    'TYPE'        => self::quotedValue($type),
+                                ]);
+                            } elseif ($exists && $nbseuil == 0) {
+                                $DB->delete(self::CONFIG_TABLE, $where);
+                            } else {
+                                $DB->update(self::CONFIG_TABLE, ['ALERT_SEUIL' => (int) $nbseuil], $where);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        PluginStockmanagementNotification::sendAlertUpdate();
+    }
+
+    private function insertUpdateState($status)
+    {
+        global $DB;
+
+        $status = (int) $status;
+        $iterator = $DB->request([
+            'SELECT' => ['STATE_ID'],
+            'FROM'   => self::STATE_TABLE,
+            'WHERE'  => ['id' => 1],
+            'LIMIT'  => 1,
+        ]);
+
+        if ($iterator->count() == 0) {
+            $DB->insert(self::STATE_TABLE, ['STATE_ID' => $status]);
+        } else {
+            $DB->update(self::STATE_TABLE, ['STATE_ID' => $status], ['id' => 1]);
+        }
+    }
+
+    public function getStatusConfig()
+    {
+        global $DB;
+
+        $result = $DB->request([
+            'SELECT' => ['STATE_ID'],
+            'FROM'   => self::STATE_TABLE,
+            'WHERE'  => ['id' => 1],
+            'LIMIT'  => 1,
+        ]);
+        foreach ($result as $status) {
+            return $status['STATE_ID'];
+        }
+
+        return 0;
+    }
+
+    public function getConfig($type)
+    {
+        global $DB;
+        $config = [];
+
+        $result = $DB->request([
+            'FROM'  => self::CONFIG_TABLE,
+            'WHERE' => [
+                'CONFIG_ID' => 1,
+                'TYPE'      => self::quotedValue($type),
+            ],
+        ]);
+
+        foreach ($result as $infos) {
+            if ($type == "TYPE") {
+                $config[$infos['CLASS_TYPE']][$infos['TYPE_ID']] = $infos['ALERT_SEUIL'];
+            } else {
+                $config[$infos['CLASS_TYPE']][self::getManufacturerModelConfigKey($infos['MARQUE_ID'], $infos['MODEL_ID'])] = $infos['ALERT_SEUIL'];
+            }
+        }
+
+        return $config ?: 0;
+    }
+
+    private static function getManufacturerModelConfigKey($manufacturer_id, $model_id)
+    {
+        return (int) $manufacturer_id . ':' . (int) $model_id;
+    }
+
+    private static function configExists(array $where)
+    {
+        global $DB;
+
+        return $DB->request([
+            'SELECT' => ['id'],
+            'FROM'   => self::CONFIG_TABLE,
+            'WHERE'  => $where,
+            'LIMIT'  => 1,
+        ])->count() > 0;
+    }
+
+    private static function quotedValue($value)
+    {
+        global $DB;
+
+        return new QueryExpression($DB->quote((string) $value));
     }
 
 }

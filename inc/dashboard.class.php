@@ -1,4 +1,5 @@
 <?php
+
 /**
  * ---------------------------------------------------------------------
  * ITSM-NG
@@ -30,32 +31,39 @@
  * ---------------------------------------------------------------------
  */
 
-class PluginStockmanagementDashboard extends CommonDBTM {
+class PluginStockmanagementDashboard extends CommonDBTM
+{
+    public static $rightname = 'plugin_stockmanagement_dashboard';
 
-    static $rightname = 'plugin_stockmanagement_dashboard';
+    private const DASHBOARD_TABLE = 'glpi_plugin_stockmanagement_dashboard';
+    private const CONFIG_TABLE = 'glpi_plugin_stockmanagement_configs';
+    private const STATE_TABLE = 'glpi_plugin_stockmanagement_states';
 
     public $data = [];
 
-    function getTabNameForItem(CommonGLPI $item, $withtemplate = 0) {
+    public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
+    {
         if (get_class($item) == 'Central') {
             return [1 => __("Stock management", 'stockmanagement')];
         }
         return '';
     }
 
-    static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0) {
+    public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
+    {
         switch ($tabnum) {
-            case 1 : // all
+            case 1: // all
                 PluginStockmanagementDashboard::showDashBoard();
                 break;
         }
         return true;
     }
 
-  
-    public static function showDashBoard() {
 
-        if(Session::haveRight("plugin_stockmanagement_dashboard", READ)){
+    public static function showDashBoard()
+    {
+
+        if (Session::haveRight("plugin_stockmanagement_dashboard", READ)) {
             $searchType = [
                 0   => '-----'
             ];
@@ -66,29 +74,29 @@ class PluginStockmanagementDashboard extends CommonDBTM {
                 0   => '-----'
             ];
             $i = 0;
-    
+
             $state          = self::getState();
             $searchParams   = self::retrieveDashboardData();
 
-            if(is_array($searchParams)) {
-                foreach($searchParams as $param) {
-                     if ($param['TYPE'] != null) {
+            if (is_array($searchParams)) {
+                foreach ($searchParams as $param) {
+                    if ($param['TYPE'] != null) {
                         $searchType[$param['TYPE']] = $param['TYPE'];
-                      
+
                     }
-                     if ($param['MARQUE'] != null) {
+                    if ($param['MARQUE'] != null) {
                         $searchMarque[$param['MARQUE']] = $param['MARQUE'];
                     }
-                     if ($param['MODEL'] != null) {
+                    if ($param['MODEL'] != null) {
                         $searchModel[$param['MODEL']] = $param['MODEL'];
                     }
-                }  
+                }
             }
 
             echo "<div >";
             echo "<b>".__("Stock per type", "stockmanagement")."</b>";
             echo "</div><br/>";
-    
+
             echo "<div >";
             echo "<table class='tab_cadre'><tr class='tab_bg_2'>";
             echo "<td> Type : ";
@@ -103,13 +111,13 @@ class PluginStockmanagementDashboard extends CommonDBTM {
             echo "</tr></table>";
             Html::closeForm();
             echo "</div>";
-    
+
             $machines   = self::retrieveDashboardData();
-    
+
             // TYPE
             echo "<div >";
             echo "<table class='tab_cadrehov'>";
-    
+
             // Fields header
             echo "<tr>";
             echo "<th>" . __("Material type", "stockmanagement") . "</th>";
@@ -117,33 +125,33 @@ class PluginStockmanagementDashboard extends CommonDBTM {
             echo "<th>" . __("Alert threshold", "stockmanagement") . "</th>";
             echo "<th>" . __("Notification sending", "stockmanagement") . "</th>";
             echo "</tr>";
-    
-            if(!is_array($machines)) {
+
+            if (!is_array($machines)) {
                 echo "<tr class='tab_bg_1'>";
                 echo "<td >" . $machines . "</td>";
                 echo "</tr>";
             } else {
-                
-                foreach($machines as $values) {
-                    if(isset($values['TYPE'])) {
+
+                foreach ($machines as $values) {
+                    if (isset($values['TYPE'])) {
                         $i++;
                         echo "<tr class='tab_bg_1' id='search_replace_type$i'>";
-                        echo "<td >" . $values['TYPE'] . "</td>";
-                        echo "<td >" . $values['NB'] . "</td>";
-                        if($values['NB'] <= $values['SEUIL']) {
-                            echo "<td  style='font-weight:bold;background-color:#ff4d4d;'>" . $values['SEUIL'] . "</td>";
+                        echo "<td >" . Html::entities_deep($values['TYPE']) . "</td>";
+                        echo "<td >" . Html::entities_deep($values['NB']) . "</td>";
+                        if ($values['NB'] <= $values['SEUIL']) {
+                            echo "<td  style='font-weight:bold;background-color:#ff4d4d;'>" . Html::entities_deep($values['SEUIL']) . "</td>";
                         } else {
-                            echo "<td >" . $values['SEUIL'] . "</td>";
+                            echo "<td >" . Html::entities_deep($values['SEUIL']) . "</td>";
                         }
-                        
 
-                        if($values['NOTIF'] == null) {
+
+                        if ($values['NOTIF'] == null) {
                             $values['NOTIF'] = __("No current notification", "stockmanagement");
                         } else {
                             $values['NOTIF'] = sprintf(__('Notification sent on : %1$s', "stockmanagement"), $values['NOTIF']);
                         }
 
-                        echo "<td >" . $values['NOTIF'] . "</td>";
+                        echo "<td >" . Html::entities_deep($values['NOTIF']) . "</td>";
                         echo "</tr>";
                     }
                 }
@@ -177,7 +185,7 @@ class PluginStockmanagementDashboard extends CommonDBTM {
             // MANUFACTURER/MODEL
             echo "<div >";
             echo "<table class='tab_cadrehov'>";
-    
+
             // Fields header
             echo "<tr>";
             echo "<th>" . __("Manufacturer") . "</th>";
@@ -186,32 +194,32 @@ class PluginStockmanagementDashboard extends CommonDBTM {
             echo "<th>" . __("Alert threshold", "stockmanagement") . "</th>";
             echo "<th>" . __("Notification sending", "stockmanagement") . "</th>";
             echo "</tr>";
-    
-            if(!is_array($machines)) {
+
+            if (!is_array($machines)) {
                 echo "<tr class='tab_bg_1'>";
                 echo "<td >" . $machines . "</td>";
                 echo "</tr>";
             } else {
-                foreach($machines as $values) {
-                    if(isset($values['MARQUE'])) {
+                foreach ($machines as $values) {
+                    if (isset($values['MARQUE'])) {
                         $i++;
                         echo "<tr class='tab_bg_1' id='search_replace_marque$i'>";
-                        echo "<td >" . $values['MARQUE'] . "</td>";
-                        echo "<td >" . $values['MODEL'] . "</td>";
-                        echo "<td >" . $values['NB'] . "</td>";
-                        if($values['NB'] <= $values['SEUIL']) {
-                            echo "<td  style='font-weight:bold;background-color:#ff4d4d;'>" . $values['SEUIL'] . "</td>";
+                        echo "<td >" . Html::entities_deep($values['MARQUE']) . "</td>";
+                        echo "<td >" . Html::entities_deep($values['MODEL']) . "</td>";
+                        echo "<td >" . Html::entities_deep($values['NB']) . "</td>";
+                        if ($values['NB'] <= $values['SEUIL']) {
+                            echo "<td  style='font-weight:bold;background-color:#ff4d4d;'>" . Html::entities_deep($values['SEUIL']) . "</td>";
                         } else {
-                            echo "<td >" . $values['SEUIL'] . "</td>";
+                            echo "<td >" . Html::entities_deep($values['SEUIL']) . "</td>";
                         }
 
-                        if($values['NOTIF'] == null) {
+                        if ($values['NOTIF'] == null) {
                             $values['NOTIF'] = __("No current notification", "stockmanagement");
                         } else {
                             $values['NOTIF'] = sprintf(__('Notification sent on : %1$s', "stockmanagement"), $values['NOTIF']);
                         }
 
-                        echo "<td >" . $values['NOTIF'] . "</td>";
+                        echo "<td >" . Html::entities_deep($values['NOTIF']) . "</td>";
                         echo "</tr>";
                     }
                 }
@@ -224,17 +232,35 @@ class PluginStockmanagementDashboard extends CommonDBTM {
         }
     }
 
-    public static function getState() {
+    public static function getState()
+    {
         global $DB;
 
-        $sql = "SELECT s.STATE_ID, n.name FROM glpi_plugin_stockmanagement_states s LEFT JOIN glpi_states n ON s.STATE_ID = n.id";
-        $result = $DB->query($sql);
-        foreach($result as $state) {
+        $result = $DB->request([
+            'SELECT'    => [
+                self::STATE_TABLE . '.STATE_ID',
+                'glpi_states.name AS name',
+            ],
+            'FROM'      => self::STATE_TABLE,
+            'LEFT JOIN' => [
+                'glpi_states' => [
+                    'ON' => [
+                        self::STATE_TABLE => 'STATE_ID',
+                        'glpi_states'     => 'id',
+                    ],
+                ],
+            ],
+            'LIMIT'     => 1,
+        ]);
+        foreach ($result as $state) {
             return $state;
         }
+
+        return ['STATE_ID' => 0, 'name' => Dropdown::EMPTY_VALUE];
     }
 
-    public function getAllMachines($state) {
+    public function getAllMachines($state)
+    {
         global $DB;
         $materialTable = [
             Computer::class         => 'glpi_computers',
@@ -247,170 +273,211 @@ class PluginStockmanagementDashboard extends CommonDBTM {
 
         $machine = [];
 
-        foreach($materialTable as $name => $table) {
+        foreach ($materialTable as $name => $table) {
             $model = "glpi_".strtolower($name)."models";
             $model_id = strtolower($name)."models_id";
             $type = "glpi_".strtolower($name)."types";
             $type_id = strtolower($name)."types_id";
 
-            $query1 = " SELECT count(t.name) as NB, t.name, s.ALERT_SEUIL
-                        FROM $table c
-                        LEFT JOIN $type t ON t.id = c.$type_id
-                        LEFT JOIN glpi_plugin_stockmanagement_configs s ON s.TYPE_ID = c.$type_id
-                        WHERE c.states_id = $state AND s.CLASS_TYPE = '$name' AND s.TYPE = 'TYPE' AND c.is_template = 0
-                        GROUP BY s.TYPE_ID";
-            $result1 = $DB->query($query1);
+            $result1 = $DB->request([
+                'SELECT'    => [
+                    'COUNT' => "$table.id AS NB",
+                    "$type.name AS name",
+                    self::CONFIG_TABLE . '.ALERT_SEUIL',
+                ],
+                'FROM'      => self::CONFIG_TABLE,
+                'LEFT JOIN' => [
+                    $type => [
+                        'ON' => [
+                            $type => 'id',
+                            self::CONFIG_TABLE => 'TYPE_ID',
+                        ],
+                    ],
+                    $table => [
+                        'ON' => [
+                            $table             => $type_id,
+                            self::CONFIG_TABLE => 'TYPE_ID',
+                            [
+                                'AND' => [
+                                    "$table.states_id"   => (int) $state,
+                                    "$table.is_template" => 0,
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'WHERE'     => [
+                    self::CONFIG_TABLE . '.CLASS_TYPE' => self::quotedValue($name),
+                    self::CONFIG_TABLE . '.TYPE'       => self::quotedValue('TYPE'),
+                ],
+                'GROUPBY'   => [
+                    self::CONFIG_TABLE . '.TYPE_ID',
+                    "$type.name",
+                    self::CONFIG_TABLE . '.ALERT_SEUIL',
+                ],
+            ]);
 
-            if($result1) foreach($result1 as $value) {
+            foreach ($result1 as $value) {
                 $machine["TYPE"][] = $value;
             }
 
-            $query2 = "  SELECT count(CONCAT(f.name, m.name)) as NB, f.name as marque, m.name as model, s.ALERT_SEUIL 
-                        FROM $table c 
-                        LEFT JOIN glpi_manufacturers f ON f.id = c.manufacturers_id 
-                        LEFT JOIN $model m ON m.id = c.$model_id
-                        LEFT JOIN glpi_plugin_stockmanagement_configs s ON s.MODEL_ID = c.$model_id
-                        WHERE c.states_id = $state AND s.CLASS_TYPE = '$name' AND s.TYPE = 'MARQUE' AND c.is_template = 0
-                        GROUP BY CONCAT(f.name, m.name)";
-            $result2 = $DB->query($query2);
-            
-            if($result2) foreach($result2 as $value) {
+            $result2 = $DB->request([
+                'SELECT'    => [
+                    'COUNT' => "$table.id AS NB",
+                    'glpi_manufacturers.name AS marque',
+                    "$model.name AS model",
+                    self::CONFIG_TABLE . '.ALERT_SEUIL',
+                ],
+                'FROM'      => self::CONFIG_TABLE,
+                'LEFT JOIN' => [
+                    'glpi_manufacturers' => [
+                        'ON' => [
+                            'glpi_manufacturers' => 'id',
+                            self::CONFIG_TABLE   => 'MARQUE_ID',
+                        ],
+                    ],
+                    $model => [
+                        'ON' => [
+                            $model => 'id',
+                            self::CONFIG_TABLE => 'MODEL_ID',
+                        ],
+                    ],
+                    $table => [
+                        'ON' => [
+                            $table             => $model_id,
+                            self::CONFIG_TABLE => 'MODEL_ID',
+                            [
+                                'AND' => [
+                                    "$table.manufacturers_id" => new QueryExpression($DB->quoteName(self::CONFIG_TABLE . '.MARQUE_ID')),
+                                    "$table.states_id"        => (int) $state,
+                                    "$table.is_template"      => 0,
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+                'WHERE'     => [
+                    self::CONFIG_TABLE . '.CLASS_TYPE' => self::quotedValue($name),
+                    self::CONFIG_TABLE . '.TYPE'       => self::quotedValue('MARQUE'),
+                ],
+                'GROUPBY'   => [
+                    self::CONFIG_TABLE . '.MARQUE_ID',
+                    self::CONFIG_TABLE . '.MODEL_ID',
+                    'glpi_manufacturers.name',
+                    "$model.name",
+                    self::CONFIG_TABLE . '.ALERT_SEUIL',
+                ],
+            ]);
+
+            foreach ($result2 as $value) {
                 $machine["MARQUE"][] = $value;
             }
-        } 
+        }
 
         return $machine;
     }
 
-    private static function retrieveDashboardData() {
+    private static function retrieveDashboardData()
+    {
         global $DB;
         $data = null;
 
-        $query = "SELECT * FROM `glpi_plugin_stockmanagement_dashboard` ORDER BY TYPE, MARQUE, MODEL";
-        $result = $DB->query($query);
+        $result = $DB->request([
+            'FROM'    => self::DASHBOARD_TABLE,
+            'ORDERBY' => ['TYPE', 'MARQUE', 'MODEL'],
+        ]);
 
-        if($result->num_rows == 0) {
+        if ($result->count() == 0) {
             $data = __("No data available", "stockmanagement");
         } else {
-            foreach($result as $value) {
-                $data[] = $value;  
+            foreach ($result as $value) {
+                $data[] = $value;
             }
         }
 
         return $data;
     }
 
-    public function refreshTableDashboard($datas) {
+    public function refreshTableDashboard($datas)
+    {
         global $DB;
 
+        $previous_notifications = $this->getPreviousNotifications();
         $this->cleanDashboard();
 
-        foreach($datas as $type => $values) {
-            foreach($values as $key => $data) {
-                if($type == "TYPE") {
+        foreach ($datas as $type => $values) {
+            if ($type === 'NOTIFICATION') {
+                continue;
+            }
+            foreach ($values as $key => $data) {
+                if ($type == "TYPE") {
                     $typeName   = $data['name'];
-                    $nb     = $data['NB'];
-                    $seuil  = $data['ALERT_SEUIL'];
+                    $nb     = (int) $data['NB'];
+                    $seuil  = (int) $data['ALERT_SEUIL'];
+                    $notif_key = self::getTypeNotificationKey($typeName);
 
-                    if(isset($data['NOTIF'])) {
-                        $notif = $data['NOTIF'];
+                    if (isset($data['NOTIF'])) {
+                        if (isset($previous_notifications[$notif_key])) {
+                            $notif = $previous_notifications[$notif_key];
+                            unset($datas[$type][$key]['NOTIF']);
+                        } else {
+                            $notif = null;
+                            $datas['NOTIFICATION'] = true;
+                        }
                     } else {
                         $notif = null;
                     }
 
-                    $query = "SELECT id FROM glpi_plugin_stockmanagement_dashboard WHERE TYPE = '$typeName'";
-                    $result = $DB->query($query);
-
-                    if($result->num_rows == 0) {
-                        $query = "INSERT INTO glpi_plugin_stockmanagement_dashboard (TYPE, NB, SEUIL) VALUES ('$typeName', $nb, $seuil)";
-                        if($notif != null) {
-                            $datas['NOTIFICATION'] = true;
-                        }
-                        $result = $DB->query($query);
-                    } else {
-                        if($notif == null) {
-                            $query = "UPDATE glpi_plugin_stockmanagement_dashboard SET NB = $nb, SEUIL = $seuil WHERE TYPE = '$typeName'";
-                        } else {
-                            $verif = self::verifIfNotifAlreadySend($type, null, null, $notif);
-                            $query = "UPDATE glpi_plugin_stockmanagement_dashboard SET NB = $nb, SEUIL = $seuil WHERE TYPE = '$typeName'";
-                            if($verif == false) {
-                                $datas['NOTIFICATION'] = true;
-                            } else {
-                                unset($datas['NOTIF']);
-                            }
-                        }
-                        $result = $DB->query($query);
-                    }
+                    $DB->insert(self::DASHBOARD_TABLE, [
+                        'TYPE'  => self::quotedValue($typeName),
+                        'NB'    => $nb,
+                        'SEUIL' => $seuil,
+                        'NOTIF' => $notif === null ? null : self::quotedValue($notif),
+                    ]);
                 } else {
                     $marque = $data['marque'];
                     $model  = $data['model'];
-                    $nb     = $data['NB'];
-                    $seuil  = $data['ALERT_SEUIL'];
+                    $nb     = (int) $data['NB'];
+                    $seuil  = (int) $data['ALERT_SEUIL'];
+                    $notif_key = self::getManufacturerModelNotificationKey($marque, $model);
 
-                    if(isset($data['NOTIF'])) {
-                        $notif = $data['NOTIF'];
+                    if (isset($data['NOTIF'])) {
+                        if (isset($previous_notifications[$notif_key])) {
+                            $notif = $previous_notifications[$notif_key];
+                            unset($datas[$type][$key]['NOTIF']);
+                        } else {
+                            $notif = null;
+                            $datas['NOTIFICATION'] = true;
+                        }
                     } else {
                         $notif = null;
                     }
 
-                    $query = "SELECT id FROM glpi_plugin_stockmanagement_dashboard WHERE MARQUE = '$marque' AND MODEl = '$model'";
-                    $result = $DB->query($query);
-
-                    if($result->num_rows == 0) {
-                        $query = "INSERT INTO glpi_plugin_stockmanagement_dashboard (MARQUE, MODEL, NB, SEUIL) VALUES ('$marque', '$model', $nb, $seuil)";
-                        if($notif != null) {
-                            $datas['NOTIFICATION'] = true;
-                        }
-                        $result = $DB->query($query);
-                    } else {
-                        if($notif == null) {
-                            $query = "UPDATE glpi_plugin_stockmanagement_dashboard SET NB = $nb, SEUIL = $seuil WHERE MARQUE = '$marque' AND MODEl = '$model'";
-                        } else {
-                            $verif = self::verifIfNotifAlreadySend(null, $marque, $model, $notif);
-                            $query = "UPDATE glpi_plugin_stockmanagement_dashboard SET NB = $nb, SEUIL = $seuil WHERE MARQUE = '$marque' AND MODEl = '$model'";
-                            if($verif == false) {
-                                $datas['NOTIFICATION'] = true;
-                            } else {
-                                unset($datas['NOTIF']);
-                            }
-                        }
-                        $result = $DB->query($query);
-                    }
+                    $DB->insert(self::DASHBOARD_TABLE, [
+                        'MARQUE' => self::quotedValue($marque),
+                        'MODEL'  => self::quotedValue($model),
+                        'NB'     => $nb,
+                        'SEUIL'  => $seuil,
+                        'NOTIF'  => $notif === null ? null : self::quotedValue($notif),
+                    ]);
                 }
             }
         }
         return $datas;
     }
 
-    private function cleanDashboard() {
+    private function cleanDashboard()
+    {
         global $DB;
 
-        $query = "DELETE FROM glpi_plugin_stockmanagement_dashboard";
-        $result = $DB->query($query);
+        $DB->delete(self::DASHBOARD_TABLE, [new QueryExpression('1 = 1')]);
     }
 
-    private function verifIfNotifAlreadySend($type, $model, $marque, $date) {
-        global $DB;
-
-        if($type != null) {
-            $query = "SELECT id FROM glpi_plugin_stockmanagement_dashboard WHERE TYPE = '$type' AND NOTIF = '$date'";
-            $result = $DB->query($query);
-        } else {
-            $query = "SELECT id FROM glpi_plugin_stockmanagement_dashboard WHERE MARQUE = '$marque' AND MODEL = '$model' AND NOTIF = '$date'";
-            $result = $DB->query($query);
-        }
-
-        if($result->num_rows == 0) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public function verifSeuil($datas) {
-        foreach($datas as $keys => $type) {
-            foreach($type as $key => $data) {
-                if(intval($data['NB']) <= intval($data['ALERT_SEUIL'])) {
+    public function verifSeuil($datas)
+    {
+        foreach ($datas as $keys => $type) {
+            foreach ($type as $key => $data) {
+                if (intval($data['NB']) <= intval($data['ALERT_SEUIL'])) {
                     $datas[$keys][$key]['NOTIF'] = date("Y-m-d H:i:s");
                 }
             }
@@ -419,15 +486,66 @@ class PluginStockmanagementDashboard extends CommonDBTM {
         return $datas;
     }
 
-    public function updateNotif($type, $marque, $model, $notif) {
+    public function updateNotif($type, $marque, $model, $notif)
+    {
         global $DB;
 
-        if($type != null) {
-            $query = "UPDATE glpi_plugin_stockmanagement_dashboard SET NOTIF = '$notif' WHERE TYPE = '$type'";
-            $result = $DB->query($query);
+        if ($type != null) {
+            $DB->update(
+                self::DASHBOARD_TABLE,
+                ['NOTIF' => self::quotedValue($notif)],
+                ['TYPE' => self::quotedValue($type)]
+            );
         } else {
-            $query = "UPDATE glpi_plugin_stockmanagement_dashboard SET NOTIF = '$notif' WHERE MARQUE = '$marque' AND MODEL = '$model'";
-            $result = $DB->query($query);
+            $DB->update(
+                self::DASHBOARD_TABLE,
+                ['NOTIF' => self::quotedValue($notif)],
+                [
+                    'MARQUE' => self::quotedValue($marque),
+                    'MODEL'  => self::quotedValue($model),
+                ]
+            );
         }
+    }
+
+    private function getPreviousNotifications()
+    {
+        global $DB;
+
+        $notifications = [];
+        $iterator = $DB->request([
+            'SELECT' => ['TYPE', 'MARQUE', 'MODEL', 'NOTIF'],
+            'FROM'   => self::DASHBOARD_TABLE,
+            'WHERE'  => [
+                'NOT' => ['NOTIF' => null],
+            ],
+        ]);
+
+        foreach ($iterator as $row) {
+            if ($row['TYPE'] !== null) {
+                $notifications[self::getTypeNotificationKey($row['TYPE'])] = $row['NOTIF'];
+            } else {
+                $notifications[self::getManufacturerModelNotificationKey($row['MARQUE'], $row['MODEL'])] = $row['NOTIF'];
+            }
+        }
+
+        return $notifications;
+    }
+
+    private static function getTypeNotificationKey($type)
+    {
+        return 'TYPE:' . $type;
+    }
+
+    private static function getManufacturerModelNotificationKey($manufacturer, $model)
+    {
+        return 'MARQUE:' . $manufacturer . ':' . $model;
+    }
+
+    private static function quotedValue($value)
+    {
+        global $DB;
+
+        return new QueryExpression($DB->quote((string) $value));
     }
 }
