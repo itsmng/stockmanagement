@@ -31,6 +31,10 @@
  * ---------------------------------------------------------------------
  */
 
+if (!defined('GLPI_ROOT')) {
+    die("Sorry. You can't access directly to this file");
+}
+
 class PluginStockmanagementNotification extends CommonDBTM
 {
     private static $pendingNotificationData = null;

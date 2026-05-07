@@ -33,6 +33,7 @@
 
 include('../../../inc/includes.php');
 
+Session::checkLoginUser();
 Session::checkRight("plugin_stockmanagement_dashboard", READ);
 
 if (isset($_GET['type']) && $_GET['type'] != '0') {
@@ -117,7 +118,7 @@ function getDataType($type)
 
     $result = $DB->request([
         'FROM'  => 'glpi_plugin_stockmanagement_dashboard',
-        'WHERE' => ['TYPE' => quotedStockmanagementValue($type)],
+        'WHERE' => ['TYPE' => new QueryExpression($DB->quote((string) $type))],
     ]);
 
     foreach ($result as $datas) {
@@ -135,11 +136,11 @@ function getDataMarque($marque, $model)
     $where = [];
 
     if ($marque != '0') {
-        $where['MARQUE'] = quotedStockmanagementValue($marque);
+        $where['MARQUE'] = new QueryExpression($DB->quote((string) $marque));
     }
 
     if ($model != '0') {
-        $where['MODEL'] = quotedStockmanagementValue($model);
+        $where['MODEL'] = new QueryExpression($DB->quote((string) $model));
     }
 
     if ($where === []) {
@@ -156,11 +157,4 @@ function getDataMarque($marque, $model)
     }
 
     return $data;
-}
-
-function quotedStockmanagementValue($value)
-{
-    global $DB;
-
-    return new QueryExpression($DB->quote((string) $value));
 }

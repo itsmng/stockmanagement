@@ -31,6 +31,10 @@
  * ---------------------------------------------------------------------
  */
 
+if (!defined('GLPI_ROOT')) {
+    die("Sorry. You can't access directly to this file");
+}
+
 class PluginStockmanagementConfig extends CommonDBTM
 {
     public static $rightname         = 'plugin_stockmanagement_config';
@@ -260,8 +264,8 @@ class PluginStockmanagementConfig extends CommonDBTM
                     foreach ($info as $id => $nbseuil) {
                         $where = [
                             'TYPE_ID'    => (int) $id,
-                            'CLASS_TYPE' => self::quotedValue($class),
-                            'TYPE'       => self::quotedValue($type),
+                            'CLASS_TYPE' => new QueryExpression($DB->quote((string) $class)),
+                            'TYPE'       => new QueryExpression($DB->quote((string) $type)),
                         ];
                         $exists = self::configExists($where);
 
@@ -269,9 +273,9 @@ class PluginStockmanagementConfig extends CommonDBTM
                             $DB->insert(self::CONFIG_TABLE, [
                                 'CONFIG_ID'   => (int) $idConfig,
                                 'TYPE_ID'     => (int) $id,
-                                'CLASS_TYPE'  => self::quotedValue($class),
+                                'CLASS_TYPE'  => new QueryExpression($DB->quote((string) $class)),
                                 'ALERT_SEUIL' => (int) $nbseuil,
-                                'TYPE'        => self::quotedValue($type),
+                                'TYPE'        => new QueryExpression($DB->quote((string) $type)),
                             ]);
                         } elseif ($exists && $nbseuil == 0) {
                             $DB->delete(self::CONFIG_TABLE, $where);
@@ -287,8 +291,8 @@ class PluginStockmanagementConfig extends CommonDBTM
                             $where = [
                                 'MARQUE_ID'  => (int) $marque,
                                 'MODEL_ID'   => (int) $id,
-                                'CLASS_TYPE' => self::quotedValue($class),
-                                'TYPE'       => self::quotedValue($type),
+                                'CLASS_TYPE' => new QueryExpression($DB->quote((string) $class)),
+                                'TYPE'       => new QueryExpression($DB->quote((string) $type)),
                             ];
                             $exists = self::configExists($where);
 
@@ -297,9 +301,9 @@ class PluginStockmanagementConfig extends CommonDBTM
                                     'CONFIG_ID'   => (int) $idConfig,
                                     'MARQUE_ID'   => (int) $marque,
                                     'MODEL_ID'    => (int) $id,
-                                    'CLASS_TYPE'  => self::quotedValue($class),
+                                    'CLASS_TYPE'  => new QueryExpression($DB->quote((string) $class)),
                                     'ALERT_SEUIL' => (int) $nbseuil,
-                                    'TYPE'        => self::quotedValue($type),
+                                    'TYPE'        => new QueryExpression($DB->quote((string) $type)),
                                 ]);
                             } elseif ($exists && $nbseuil == 0) {
                                 $DB->delete(self::CONFIG_TABLE, $where);
@@ -360,7 +364,7 @@ class PluginStockmanagementConfig extends CommonDBTM
             'FROM'  => self::CONFIG_TABLE,
             'WHERE' => [
                 'CONFIG_ID' => 1,
-                'TYPE'      => self::quotedValue($type),
+                'TYPE'      => new QueryExpression($DB->quote((string) $type)),
             ],
         ]);
 
@@ -390,13 +394,6 @@ class PluginStockmanagementConfig extends CommonDBTM
             'WHERE'  => $where,
             'LIMIT'  => 1,
         ])->count() > 0;
-    }
-
-    private static function quotedValue($value)
-    {
-        global $DB;
-
-        return new QueryExpression($DB->quote((string) $value));
     }
 
 }

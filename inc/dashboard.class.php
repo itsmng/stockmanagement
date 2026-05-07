@@ -31,6 +31,10 @@
  * ---------------------------------------------------------------------
  */
 
+if (!defined('GLPI_ROOT')) {
+    die("Sorry. You can't access directly to this file");
+}
+
 class PluginStockmanagementDashboard extends CommonDBTM
 {
     public static $rightname = 'plugin_stockmanagement_dashboard';
@@ -307,8 +311,8 @@ class PluginStockmanagementDashboard extends CommonDBTM
                     ],
                 ],
                 'WHERE'     => [
-                    self::CONFIG_TABLE . '.CLASS_TYPE' => self::quotedValue($name),
-                    self::CONFIG_TABLE . '.TYPE'       => self::quotedValue('TYPE'),
+                    self::CONFIG_TABLE . '.CLASS_TYPE' => new QueryExpression($DB->quote((string) $name)),
+                    self::CONFIG_TABLE . '.TYPE'       => new QueryExpression($DB->quote('TYPE')),
                 ],
                 'GROUPBY'   => [
                     self::CONFIG_TABLE . '.TYPE_ID',
@@ -357,8 +361,8 @@ class PluginStockmanagementDashboard extends CommonDBTM
                     ],
                 ],
                 'WHERE'     => [
-                    self::CONFIG_TABLE . '.CLASS_TYPE' => self::quotedValue($name),
-                    self::CONFIG_TABLE . '.TYPE'       => self::quotedValue('MARQUE'),
+                    self::CONFIG_TABLE . '.CLASS_TYPE' => new QueryExpression($DB->quote((string) $name)),
+                    self::CONFIG_TABLE . '.TYPE'       => new QueryExpression($DB->quote('MARQUE')),
                 ],
                 'GROUPBY'   => [
                     self::CONFIG_TABLE . '.MARQUE_ID',
@@ -429,10 +433,10 @@ class PluginStockmanagementDashboard extends CommonDBTM
                     }
 
                     $DB->insert(self::DASHBOARD_TABLE, [
-                        'TYPE'  => self::quotedValue($typeName),
+                        'TYPE'  => new QueryExpression($DB->quote((string) $typeName)),
                         'NB'    => $nb,
                         'SEUIL' => $seuil,
-                        'NOTIF' => $notif === null ? null : self::quotedValue($notif),
+                        'NOTIF' => $notif === null ? null : new QueryExpression($DB->quote((string) $notif)),
                     ]);
                 } else {
                     $marque = $data['marque'];
@@ -454,11 +458,11 @@ class PluginStockmanagementDashboard extends CommonDBTM
                     }
 
                     $DB->insert(self::DASHBOARD_TABLE, [
-                        'MARQUE' => self::quotedValue($marque),
-                        'MODEL'  => self::quotedValue($model),
+                        'MARQUE' => new QueryExpression($DB->quote((string) $marque)),
+                        'MODEL'  => new QueryExpression($DB->quote((string) $model)),
                         'NB'     => $nb,
                         'SEUIL'  => $seuil,
-                        'NOTIF'  => $notif === null ? null : self::quotedValue($notif),
+                        'NOTIF'  => $notif === null ? null : new QueryExpression($DB->quote((string) $notif)),
                     ]);
                 }
             }
@@ -493,16 +497,16 @@ class PluginStockmanagementDashboard extends CommonDBTM
         if ($type != null) {
             $DB->update(
                 self::DASHBOARD_TABLE,
-                ['NOTIF' => self::quotedValue($notif)],
-                ['TYPE' => self::quotedValue($type)]
+                ['NOTIF' => new QueryExpression($DB->quote((string) $notif))],
+                ['TYPE' => new QueryExpression($DB->quote((string) $type))]
             );
         } else {
             $DB->update(
                 self::DASHBOARD_TABLE,
-                ['NOTIF' => self::quotedValue($notif)],
+                ['NOTIF' => new QueryExpression($DB->quote((string) $notif))],
                 [
-                    'MARQUE' => self::quotedValue($marque),
-                    'MODEL'  => self::quotedValue($model),
+                    'MARQUE' => new QueryExpression($DB->quote((string) $marque)),
+                    'MODEL'  => new QueryExpression($DB->quote((string) $model)),
                 ]
             );
         }
@@ -542,10 +546,4 @@ class PluginStockmanagementDashboard extends CommonDBTM
         return 'MARQUE:' . $manufacturer . ':' . $model;
     }
 
-    private static function quotedValue($value)
-    {
-        global $DB;
-
-        return new QueryExpression($DB->quote((string) $value));
-    }
 }

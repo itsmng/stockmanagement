@@ -36,8 +36,7 @@ function reloadType() {
 	var RegexUrl = /^(.*)front\/.*\.php/;
 	var RegexUrlRes = RegexUrl.exec(window.location.pathname);
 	var root_glpi = RegexUrlRes[1];
-	var php_file = root_glpi + "plugins/stockmanagement/ajax/reload.php?type=" + searchType;
-	console.log(php_file);
+	var php_file = root_glpi + "plugins/stockmanagement/ajax/reload.php?type=" + encodeURIComponent(searchType);
 	$.ajax({
 		type: 'GET',
 		url: php_file,
@@ -62,8 +61,7 @@ function reloadMarque() {
 	var RegexUrl = /^(.*)front\/.*\.php/;
 	var RegexUrlRes = RegexUrl.exec(window.location.pathname);
 	var root_glpi = RegexUrlRes[1];
-	var php_file = root_glpi + "plugins/stockmanagement/ajax/reload.php?marque=" + searchMarque + "&model=" + searchModel;
-	console.log(php_file);
+	var php_file = root_glpi + "plugins/stockmanagement/ajax/reload.php?marque=" + encodeURIComponent(searchMarque) + "&model=" + encodeURIComponent(searchModel);
 	$.ajax({
 		type: 'GET',
 		url: php_file,
