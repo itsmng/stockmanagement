@@ -258,10 +258,47 @@ class PluginStockmanagementNotification extends CommonDBTM
 
     private static function raiseAlertEvent($event, array $options = [])
     {
-        PluginStockmanagementNotificationEvent::raiseEvent(
-            $event,
-            new self(),
-            $options + ['entities_id' => 0]
-        );
+        foreach (self::getStockEntityIDs() as $entities_id) {
+            PluginStockmanagementNotificationEvent::raiseEvent(
+                $event,
+                new self(),
+                $options + ['entities_id' => $entities_id]
+            );
+        }
+    }
+
+    private static function getStockEntityIDs()
+    {
+        global $DB;
+
+        $dashboard = new PluginStockmanagementDashboard();
+        $state = (int) $dashboard->getState()['STATE_ID'];
+        $entities = [];
+        $tables = [
+            'glpi_computers',
+            'glpi_monitors',
+            'glpi_networkequipments',
+            'glpi_peripherals',
+            'glpi_printers',
+            'glpi_phones',
+        ];
+
+        foreach ($tables as $table) {
+            $iterator = $DB->request([
+                'SELECT'   => ['entities_id'],
+                'DISTINCT' => true,
+                'FROM'     => $table,
+                'WHERE'    => [
+                    'states_id'   => $state,
+                    'is_template' => 0,
+                ],
+            ]);
+
+            foreach ($iterator as $row) {
+                $entities[(int) $row['entities_id']] = (int) $row['entities_id'];
+            }
+        }
+
+        return $entities ?: [0];
     }
 }
