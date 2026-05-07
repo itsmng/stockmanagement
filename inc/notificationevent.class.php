@@ -57,7 +57,9 @@ class PluginStockmanagementNotificationEvent extends NotificationEvent
             $email_processed    = [];
             $email_notprocessed = [];
 
-            $options['entities_id'] = 0; //New code
+            if (!isset($options['entities_id'])) {
+                $options['entities_id'] = 0;
+            }
             $notificationtarget = NotificationTarget::getInstance($item, $event, $options);
             if (!$notificationtarget) {
                 return false;

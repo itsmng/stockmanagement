@@ -33,6 +33,8 @@
 
 class PluginStockmanagementNotification extends CommonDBTM
 {
+    private static $pendingNotificationData = null;
+
     /**
     * @var boolean activate the history for the plugin
     */
@@ -60,35 +62,43 @@ class PluginStockmanagementNotification extends CommonDBTM
         global $DB;
 
         $template = new NotificationTemplate();
-        $found_template = $template->find(['itemtype' => 'PluginStockmanagementNotification']);
+        if (!empty($template->find(['itemtype' => __CLASS__]))) {
+            return ['success' => true];
+        }
 
-        if (empty($found_template)) {
+        $content_text = addslashes(__("Some machines have exceeded the threshold", "stockmanagement")).".\n ##stockmanagement.listtype##\n\n##stockmanagement.listmanufacturer##\n\n";
+        $content_html = "\n<p>".addslashes(__("Some machines have exceeded the threshold", "stockmanagement")).".</p>\n ##stockmanagement.listtype##\n\n##stockmanagement.listmanufacturer##\n\n";
+
+        $notifications = [
+            'sendAlertThreshold' => __('Recurring notification for Stock Management', 'stockmanagement'),
+            'sendAlertThresholdUpdate' => __('Notification update for Stock Management', 'stockmanagement'),
+        ];
+
+        foreach ($notifications as $event => $name) {
             $template_id = $template->add([
-                'name'                     => __('Recurring notification for Stock Management', 'stockmanagement'),
-                'comment'                  => "",
-                'itemtype'                 => __CLASS__,
+                'name'     => $name,
+                'comment'  => "",
+                'itemtype' => __CLASS__,
             ]);
-
-            $content_html = "\n<p>".addslashes(__("Some machines have exceeded the threshold", "stockmanagement")).".</p>\n ##stockmanagement.listtype##\n\n##stockmanagement.listmanufacturer##\n\n";
 
             $translation = new NotificationTemplateTranslation();
             $translation->add([
                 'notificationtemplates_id' => $template_id,
                 'language'                 => "",
                 'subject'                  => __("Stock management", 'stockmanagement'),
-                'content_text'             => addslashes(__("Some machines have exceeded the threshold", "stockmanagement")).".\n ##stockmanagement.listtype##\n\n##stockmanagement.listmanufacturer##\n\n",
+                'content_text'             => $content_text,
                 'content_html'             => $content_html
             ]);
 
             $notification = new Notification();
             $notification_id = $notification->add([
-                'name'                     => __('Recurring notification for Stock Management', 'stockmanagement'),
-                'comment'                  => "",
-                'entities_id'              => 0,
-                'is_recursive'             => 1,
-                'is_active'                => 1,
-                'itemtype'                 => __CLASS__,
-                'event'                    => 'sendAlertThreshold',
+                'name'         => $name,
+                'comment'      => "",
+                'entities_id'  => 0,
+                'is_recursive' => 1,
+                'is_active'    => 1,
+                'itemtype'     => __CLASS__,
+                'event'        => $event,
             ]);
 
             $n_n_template = new Notification_NotificationTemplate();
@@ -99,49 +109,8 @@ class PluginStockmanagementNotification extends CommonDBTM
             ]);
 
             $DB->insert('glpi_notificationtargets', [
-                'items_id'         => 1,
-                'type'             => 1,
-                'notifications_id' => (int) $notification_id,
-            ]);
-
-            $template_id = $template->add([
-                'name'                     => __('Notification update for Stock Management', 'stockmanagement'),
-                'comment'                  => "",
-                'itemtype'                 => __CLASS__,
-            ]);
-
-            $content_html = "\n<p>".addslashes(__("Some machines have exceeded the threshold", "stockmanagement")).".</p>\n ##stockmanagement.listtype##\n\n##stockmanagement.listmanufacturer##\n\n";
-
-            $translation = new NotificationTemplateTranslation();
-            $translation->add([
-                'notificationtemplates_id' => $template_id,
-                'language'                 => "",
-                'subject'                  => __("Stock management", 'stockmanagement'),
-                'content_text'             => addslashes(__("Some machines have exceeded the threshold", "stockmanagement")).".\n ##stockmanagement.listtype##\n\n##stockmanagement.listmanufacturer##\n\n",
-                'content_html'             => $content_html
-            ]);
-
-            $notification = new Notification();
-            $notification_id = $notification->add([
-                'name'                     => __('Notification update for Stock Management', 'stockmanagement'),
-                'comment'                  => "",
-                'entities_id'              => 0,
-                'is_recursive'             => 1,
-                'is_active'                => 1,
-                'itemtype'                 => __CLASS__,
-                'event'                    => 'sendAlertThresholdUpdate',
-            ]);
-
-            $n_n_template = new Notification_NotificationTemplate();
-            $n_n_template->add([
-                'notifications_id'         => $notification_id,
-                'mode'                     => Notification_NotificationTemplate::MODE_MAIL,
-                'notificationtemplates_id' => $template_id,
-            ]);
-
-            $DB->insert('glpi_notificationtargets', [
-                'items_id'         => 1,
-                'type'             => 1,
+                'items_id'         => Notification::GLOBAL_ADMINISTRATOR,
+                'type'             => Notification::USER_TYPE,
                 'notifications_id' => (int) $notification_id,
             ]);
         }
@@ -202,14 +171,11 @@ class PluginStockmanagementNotification extends CommonDBTM
     */
     public static function send($mailing_options, $additional_options)
     {
-        $dashboard = new PluginStockmanagementDashboard();
+        if (self::$pendingNotificationData === null) {
+            self::$pendingNotificationData = self::refreshDashboardData();
+        }
 
-        $state  = $dashboard->getState();
-        $data   = $dashboard->getAllMachines($state['STATE_ID']);
-        $data   = $dashboard->verifSeuil($data);
-        $data   = $dashboard->refreshTableDashboard($data);
-
-        if (isset($data['NOTIFICATION'])) {
+        if (isset(self::$pendingNotificationData['NOTIFICATION'])) {
             $mail = new PluginStockmanagementNotificationMail();
             $mail->sendNotification($mailing_options);
         }
@@ -220,15 +186,23 @@ class PluginStockmanagementNotification extends CommonDBTM
     *
     * @param CronTask $task Object of CronTask class for log / stat
     *
-    * @return interger
+    * @return integer
     *    >0 : done
     *    <0 : to be run again (not finished)
     *     0 : nothing to do
     */
     public static function cronSendAlertMorning($task)
     {
+        self::$pendingNotificationData = self::refreshDashboardData();
+
+        if (!isset(self::$pendingNotificationData['NOTIFICATION'])) {
+            self::$pendingNotificationData = null;
+            return 0;
+        }
+
         $task->log(__("Notification(s) sent !", 'stockmanagement'));
-        PluginStockmanagementNotificationEvent::raiseEvent('sendAlertThreshold', new self(), $task->fields);
+        self::raiseAlertEvent('sendAlertThreshold', $task->fields);
+        self::$pendingNotificationData = null;
         return 1;
     }
 
@@ -237,21 +211,57 @@ class PluginStockmanagementNotification extends CommonDBTM
     *
     * @param CronTask $task Object of CronTask class for log / stat
     *
-    * @return interger
+    * @return integer
     *    >0 : done
     *    <0 : to be run again (not finished)
     *     0 : nothing to do
     */
     public static function cronSendAlertAfternoon($task)
     {
+        self::$pendingNotificationData = self::refreshDashboardData();
+
+        if (!isset(self::$pendingNotificationData['NOTIFICATION'])) {
+            self::$pendingNotificationData = null;
+            return 0;
+        }
+
         $task->log(__("Notification(s) sent !", 'stockmanagement'));
-        PluginStockmanagementNotificationEvent::raiseEvent('sendAlertThreshold', new self(), $task->fields);
+        self::raiseAlertEvent('sendAlertThreshold', $task->fields);
+        self::$pendingNotificationData = null;
         return 1;
     }
 
     public static function sendAlertUpdate()
     {
-        PluginStockmanagementNotificationEvent::raiseEvent('sendAlertThresholdUpdate', new self());
+        self::$pendingNotificationData = self::refreshDashboardData();
+
+        if (!isset(self::$pendingNotificationData['NOTIFICATION'])) {
+            self::$pendingNotificationData = null;
+            return 0;
+        }
+
+        self::raiseAlertEvent('sendAlertThresholdUpdate');
+        self::$pendingNotificationData = null;
         return 1;
+    }
+
+    private static function refreshDashboardData()
+    {
+        $dashboard = new PluginStockmanagementDashboard();
+
+        $state  = $dashboard->getState();
+        $data   = $dashboard->getAllMachines($state['STATE_ID']);
+        $data   = $dashboard->verifSeuil($data);
+
+        return $dashboard->refreshTableDashboard($data);
+    }
+
+    private static function raiseAlertEvent($event, array $options = [])
+    {
+        PluginStockmanagementNotificationEvent::raiseEvent(
+            $event,
+            new self(),
+            $options + ['entities_id' => 0]
+        );
     }
 }
